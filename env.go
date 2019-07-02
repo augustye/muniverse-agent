@@ -2,6 +2,7 @@ package main
 
 import (
 	"time"
+	"log"
 
 	"github.com/unixpickle/essentials"
 	"github.com/unixpickle/muniverse"
@@ -64,6 +65,7 @@ func NewEnv(flags *TrainingFlags, spec *EnvSpec) *Env {
 
 // Reset resets the environment.
 func (e *Env) Reset() (obs []float64, err error) {
+	log.Println("[Reset] start")
 	defer essentials.AddCtxTo("reset", &err)
 
 	e.Actor.Reset()
@@ -71,20 +73,24 @@ func (e *Env) Reset() (obs []float64, err error) {
 
 	err = e.RawEnv.Reset()
 	if err != nil {
+		log.Println("[Reset] RawEnv.Reset() error:", err)
 		return
 	}
 
 	rawObs, err := e.RawEnv.Observe()
 	if err != nil {
+		log.Println("[Reset] RawEnv.Observe() error:", err)
 		return
 	}
 	obsVec, err := e.Observer.ObsVec(rawObs)
 	if err != nil {
+		log.Println("[Reset] Observer.ObsVec() error:", err)
 		return
 	}
 	e.joiner.Reset(obsVec)
 	obs = e.joiner.Step(obsVec)
 
+	log.Println("[Reset] done")
 	return
 }
 
@@ -102,10 +108,12 @@ func (e *Env) Step(action []float64) (obs []float64, reward float64,
 
 	rawObs, err := e.RawEnv.Observe()
 	if err != nil {
+		log.Println("[Step] RawEnv.Observe() error:", err)
 		return
 	}
 	obsVec, err := e.Observer.ObsVec(rawObs)
 	if err != nil {
+		log.Println("[Step] Observer.ObsVec() error:", err)
 		return
 	}
 	obs = e.joiner.Step(obsVec)
